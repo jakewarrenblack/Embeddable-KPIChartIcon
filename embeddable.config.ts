@@ -7,7 +7,7 @@ export default defineConfig({
   /*
    * uncomment for EU deployments
    */
-  // region: 'EU',
+  region: 'EU',
 
   /*
    * uncomment for US deployments
@@ -17,7 +17,7 @@ export default defineConfig({
   /*
    * Uncomment use ALL vanilla components.
    */
-  // componentLibraries: ['@embeddable.com/vanilla-components'],
+  componentLibraries: ['@embeddable.com/vanilla-components'],
 
   //For internal use only (this helps us help you debug issues)
   //

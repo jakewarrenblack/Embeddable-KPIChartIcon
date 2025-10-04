@@ -1,0 +1,189 @@
+import { DataResponse, Measure } from '@embeddable.com/core';
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { twMerge } from 'tailwind-merge';
+import { useTheme } from '@embeddable.com/react';
+
+import useResize, { Size } from '../../hooks/useResize';
+import Description from './Description';
+import DownloadMenu from './DownloadMenu';
+import Spinner from './Spinner';
+import Title from './Title';
+import { WarningIcon } from '../KPIChartIcon/Icons';
+import './index.css';
+import { Theme } from '../../themes/theme';
+
+type DataResponseData = (
+  | {
+      [key: string]: any;
+    }
+  | undefined
+)[];
+
+export type ContainerProps = {
+  childContainerClassName?: string;
+  className?: string;
+  clientContext?: any;
+  downloadAllFunction?: () => void;
+  description?: string;
+  displayAsPercentage?: boolean;
+  enableDownloadAsCSV?: boolean;
+  enableDownloadAsPNG?: boolean;
+  metric?: Measure;
+  onResize?: (size: Size) => void;
+  prevResults?: DataResponse;
+  results?: DataResponse | DataResponse[];
+  setResizeState?: (resizing: boolean) => void;
+  title?: string;
+};
+
+export default ({
+  children,
+  className,
+  childContainerClassName,
+  onResize,
+  setResizeState,
+  ...props
+}: PropsWithChildren<ContainerProps>) => {
+  const refPrevHeight = useRef<number | null>(null);
+  const refExportPNGElement = useRef<HTMLDivElement | null>(null);
+  const refResize = useRef<HTMLDivElement | null>(null);
+  const refResizingTimeout = useRef<number | null>(null);
+  const { height } = useResize(refResize, onResize || null);
+  const [preppingDownload, setPreppingDownload] = useState<boolean>(false);
+
+  const theme: Theme = useTheme() as Theme;
+
+  //Detect when the component is being resized by the user
+  useEffect(() => {
+    if (!setResizeState) {
+      return;
+    }
+    const currentHeight = height;
+    // If refPrevHeight is null, this is the first render, so initialize it
+    if (refPrevHeight.current === null) {
+      refPrevHeight.current = currentHeight;
+    }
+    if (currentHeight !== refPrevHeight.current) {
+      setResizeState?.(true);
+      // Clear the timeout if it exists, to debounce the resize state reset
+      if (refResizingTimeout.current) {
+        window.clearTimeout(refResizingTimeout.current);
+      }
+      // Set a timer to reset the resize state after 300ms
+      refResizingTimeout.current = window.setTimeout(() => {
+        setResizeState?.(false);
+      }, 300);
+    }
+    // Update the previous height with the current height
+    refPrevHeight.current = currentHeight;
+    // Clean up the timeout when the component unmounts
+    return () => {
+      if (refResizingTimeout.current) {
+        window.clearTimeout(refResizingTimeout.current);
+      }
+    };
+  }, [height, setResizeState]); // Depend on height, so it runs whenever height changes
+
+  const { isLoading, error, data } = Array.isArray(props.results)
+    ? {
+        isLoading: props.results.some((result) => result.isLoading),
+        error: props.results.some((result) => result.error),
+        data: props.results.flatMap((result) => result.data).filter((data) => data),
+      }
+    : props.results || {};
+  const noData = !isLoading && !data?.length;
+
+  let csvData: DataResponseData = data ? [...data] : [];
+
+  // If the displayAsPercentage prop is set, convert metric values to percentages
+  if (props.metric && props.displayAsPercentage) {
+    const total = csvData.reduce((acc, curr) => {
+      const val = parseInt(curr?.[props.metric!.name], 10);
+      return acc + (!isNaN(val) ? val : 0);
+    }, 0);
+    csvData = csvData.map((item) => {
+      const val = parseFloat(item?.[props.metric!.name]);
+      const percent = total > 0 ? (val / total) * 100 : 0;
+      const percentString = `${percent.toFixed(2)}%`;
+      return {
+        ...item,
+        [props.metric!.name]: percentString,
+      };
+    });
+  }
+
+  return (
+    <>
+      <div className="h-full relative font-embeddable text-sm flex flex-col">
+        {props.enableDownloadAsCSV || props.enableDownloadAsPNG ? (
+          <div className={`${!props.title ? 'h-[32px] w-full' : ''}`}>
+            {/* spacer to keep charts from overlaying download menu if no title*/}
+          </div>
+        ) : null}
+        <Spinner show={isLoading || preppingDownload} />
+        <div className={`h-full relative flex flex-col`} ref={refExportPNGElement}>
+          <div className={`flex flex-col items-${theme.charts.textJustify}`}>
+            <Title title={props.title} />
+            <Description description={props.description} />
+          </div>
+
+          <div ref={refResize} className={twMerge(`relative grow flex flex-col`, className || '')}>
+            <div
+              className={twMerge('-z-0 flex flex-col', childContainerClassName || '')}
+              style={{ height: `${height}px` }}
+            >
+              {
+                height && props.results && (error || noData) ? (
+                  <div className="h-full flex items-center justify-center font-embeddable text-sm">
+                    <WarningIcon />
+                    <div className="whitespace-pre-wrap p-4 max-w-sm text-sm">
+                      {error || '0 results'}
+                    </div>
+                  </div>
+                ) : height ? (
+                  children
+                ) : null // Ensure height is calculated before rendering charts to prevent libraries (e.g., ChartJS) from overflowing the container
+              }
+            </div>
+            {isLoading && !data?.length && (
+              <div
+                className={`
+                absolute
+                h-full
+                left-0
+                overflow-hidden
+                rounded
+                skeleton-box
+                top-0
+                w-full
+                z-[--embeddable-controls-skeletonBox-zIndex]
+                bg-[color:--embeddable-controls-backgrounds-colors-heavy]
+              `}
+              />
+            )}
+          </div>
+        </div>
+        {!isLoading && (props.enableDownloadAsCSV || props.enableDownloadAsPNG) ? (
+          <DownloadMenu
+            csvOpts={{
+              chartName: props.title || 'chart',
+              props: {
+                ...props,
+                results: props.displayAsPercentage
+                  ? ({ isLoading: false, data: csvData } as DataResponse)
+                  : props.results,
+                prevResults: props.prevResults,
+              },
+            }}
+            downloadAllFunction={props.downloadAllFunction}
+            enableDownloadAsCSV={props.enableDownloadAsCSV}
+            enableDownloadAsPNG={props.enableDownloadAsPNG}
+            pngOpts={{ chartName: props.title || 'chart', element: refExportPNGElement.current }}
+            preppingDownload={preppingDownload}
+            setPreppingDownload={setPreppingDownload}
+          />
+        ) : null}
+      </div>
+    </>
+  );
+};

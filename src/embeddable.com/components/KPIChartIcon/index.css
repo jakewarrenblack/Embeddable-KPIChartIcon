@@ -1,0 +1,193 @@
+/* Tailwind Imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Related CSS Values */
+.font-embeddable {
+  color: var(--embeddable-font-color);
+  font-family: var(--embeddable-font-family);
+  font-size: var(--embeddable-font-size);
+}
+.font-family-embeddable-title {
+  font-family: var(--embeddable-font-title-family);
+  font-size: var(--embeddable-font-title-size);
+  color: var(--embeddable-font-title-color);
+}
+.font-family-embeddable-description {
+  font-family: var(--embeddable-font-description-family);
+  font-size: var(--embeddable-font-description-size);
+  color: var(--embeddable-font-description-color);
+}
+.embeddable-table-header {
+  color: var(--embeddable-table-header-color);
+}
+
+/* Keep MacOs from making web fonts look weirdly bolded */
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Handle some z-indexing issues */
+:host(.on-top) {
+  z-index: var(--embeddable-hostOnTop-zIndex);
+}
+
+/* Every component has an inside-card class */
+:host(.inside-card) {
+  box-shadow: var(--embeddable-container-boxShadow);
+  border-radius: var(--embeddable-container-borderRadius);
+  padding: var(--embeddable-container-padding) !important;
+  border: var(--embeddable-container-border);
+  background-color: var(--embeddable-container-backgroundColor);
+}
+
+/* Day Picker */
+.rdp-day_button {
+  border-radius: var(--embeddable-controls-datepicker-radiuses-button) !important;
+}
+
+.rdp-week_number {
+  border-radius: var(--embeddable-controls-datepicker-radiuses-weekNumber) !important;
+}
+
+/* DAY MODIFIERS */
+.rdp-today:not(.rdp-outside) {
+  color: var(--embeddable-controls-datepicker-font-colors-today) !important;
+}
+
+.rdp-hidden {
+  visibility: hidden;
+  color: var(--embeddable-controls-datepicker-font-colors-rangeStart) !important;
+}
+
+.rdp-range_start {
+  background: var(--embeddable-controls-datepicker-backgrounds-colors-rangeStart) !important;
+}
+
+.rdp-range_start .rdp-day_button {
+  background-color: var(--embeddable-controls-datepicker-backgrounds-colors-rangeStart) !important;
+  color: var(--embeddable-controls-datepicker-font-colors-rangeStart) !important;
+  border-radius: var(--embeddable-controls-datepicker-radiuses-buttonStart) !important;
+}
+
+.rdp-range_middle {
+  background-color: var(--embeddable-controls-datepicker-backgrounds-colors-rangeMiddle) !important;
+}
+
+.rdp-range_middle .rdp-day_button {
+  color: var(--embeddable-controls-datepicker-font-colors-rangeMiddle) !important;
+}
+
+.rdp-range_end {
+  background: var(--embeddable-controls-datepicker-backgrounds-colors-rangeEnd) !important;
+  color: var(--embeddable-controls-datepicker-font-colors-rangeEnd) !important;
+}
+
+.rdp-range_end .rdp-day_button {
+  color: var(--embeddable-controls-datepicker-font-colors-rangeEnd) !important;
+  background-color: var(--embeddable-controls-datepicker-backgrounds-colors-rangeEnd) !important;
+  border-radius: var(--embeddable-controls-datepicker-radiuses-buttonEnd) !important;
+}
+
+.rdp-day.rdp-range_end {
+  border-radius: var(--embeddable-controls-datepicker-radiuses-buttonEnd) !important;
+}
+
+.rdp-day.rdp-range_start {
+  border-radius: var(--embeddable-controls-datepicker-radiuses-buttonStart) !important;
+}
+
+.rdp-day.rdp-range_start.rdp-range_end,
+.rdp-day.rdp-range_start.rdp-range_end .rdp-day_button {
+  border-radius: var(--embeddable-controls-datepicker-radiuses-button) !important;
+}
+
+/* Spinner */
+.spinner {
+  -webkit-animation: spin 500ms ease-in-out infinite;
+  -moz-animation: spin 500ms ease-in-out infinite;
+  animation: spin 500ms ease-in-out infinite;
+}
+@keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+.skeleton-box::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: var(--embeddable-controls-skeletonBox-backgroundImage);
+  animation: var(--embeddable-controls-skeletonBox-animation);
+  content: '';
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Handle Text Overflow Cases */
+.text-overflow-dynamic-container {
+  position: relative;
+  max-width: 100%;
+  padding: 0 !important;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: flex;
+  vertical-align: text-bottom !important;
+}
+.text-overflow-dynamic-ellipsis {
+  position: absolute;
+  white-space: nowrap;
+  overflow-y: visible;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  -ms-text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+.text-overflow-dynamic-container:after,
+.text-overflow-dynamic-ellipsis:after {
+  content: '-';
+  display: inline;
+  visibility: hidden;
+  width: 0;
+}
+
+/* Multi-Selects */
+.multiSelectContainer {
+  display: flex;
+  flex-wrap: wrap;
+}
+.multiselectItem {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--embeddable-controls-buttons-multiSelect-margin);
+  max-width: var(--embeddable-controls-buttons-multiSelect-maxWidth);
+  padding: var(--embeddable-controls-buttons-multiSelect-padding);
+  border-radius: var(--embeddable-controls-buttons-multiSelect-radius);
+}
+.multiSelectInner {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Input Placeholder */
+input::placeholder,
+[placeholder] {
+  text-overflow: ellipsis;
+  padding-right: 1.5rem;
+}
